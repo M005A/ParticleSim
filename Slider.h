@@ -8,7 +8,7 @@ class Slider
 public:
     Slider(float x, float y, float width, float height, sf::Color color);
     float getSliderValue(sf::Event event, sf::RenderWindow &window);
-    void draw(sf::RenderWindow &window);
+    void draw(sf::RenderTexture &renderTexture);
 
 private:
     float x;

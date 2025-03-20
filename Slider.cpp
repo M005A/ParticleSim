@@ -48,7 +48,7 @@ float Slider::getSliderValue(sf::Event event, sf::RenderWindow &window)
     return x;
 }
 
-void Slider::draw(sf::RenderWindow &window)
+void Slider::draw(sf::RenderTexture &renderTexture)
 {
     sf::RectangleShape rectangle(sf::Vector2f(width, height));
     sf::RectangleShape rail(sf::Vector2f(width*6, height/3));
@@ -56,6 +56,6 @@ void Slider::draw(sf::RenderWindow &window)
     rail.setPosition(400, y+height/3);
     rail.setFillColor(sf::Color::White);
     rectangle.setFillColor(color);
-    window.draw(rail);
-    window.draw(rectangle);
+    renderTexture.draw(rail);
+    renderTexture.draw(rectangle);
 }
