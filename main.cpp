@@ -3,8 +3,9 @@
 #include <iostream>
 #include "Particle.h"
 #include "Slider.h"
-
+#include <cmath>
 using namespace std;
+vector<Particle> particles;
 
 float calculateSimulationTime(sf::Clock &clock, float &lastTime, float sliderPos)
 {
@@ -64,22 +65,52 @@ void drawGrid(vector<sf::RectangleShape> &rectangles, int col, int row)
     }
 }
 
+double calculateDensity(const Particle &mouse)
+{
+    if (mouse.radius == 0)
+        return 0.0;
+
+    double density = 0.0;
+    double h = mouse.radius; // Use only the mouse radius as the smoothing length
+    double h2 = h * h;       // Squared for efficiency
+
+    for (const auto &particle : particles)
+    {
+        float dx = particle.x - mouse.x;
+        float dy = particle.y - mouse.y;
+        float distanceSquared = dx * dx + dy * dy;
+        
+        // Only count particles strictly within the mouse radius
+        if (distanceSquared < h2)
+        {
+             double weight = pow(1 - (distanceSquared / h2), 3);
+             density += weight;
+        }
+    }
+
+    // Normalize by the area to get density
+    double area =  3.14159265358979323846 * h2;
+    return density / area;
+}
+
 int main()
 {
     const float GRAVITY = 9.81f * 3; // m/s²
     float sliderPos = 400.0f;
 
-    vector<Particle> particles;
-    
+    Particle followMouse(400, 300, 0, 0, 50, sf::Color(255, 0, 0, 50));
+
     Slider timeSlider(sliderPos, 50, 50, 25, sf::Color::Green);
-    float timeValue = sliderPos;  // Initialize to match the initial slider position
+    float timeValue = sliderPos; // Initialize to match the initial slider position
 
     Slider sizeSlider(sliderPos, 75, 50, 25, sf::Color::Red);
-    float sizeValue = sliderPos;  // Initialize to match the initial slider position
+    float sizeValue = sliderPos; // Initialize to match the initial slider position
 
     Slider numSlider(sliderPos, 100, 50, 25, sf::Color::Blue);
-    float numValue = sliderPos;  // Initialize to match the initial slider position
+    float numValue = sliderPos; // Initialize to match the initial slider position
 
+    Slider smoothingSlider(sliderPos, 125, 50, 25, sf::Color::Yellow);
+    float smoothingValue = sliderPos; // Initialize to match the initial slider position
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 
@@ -88,30 +119,40 @@ int main()
 
     // Create render texture for blur effect
     sf::RenderTexture renderTexture;
-    if (!renderTexture.create(800, 600)) {
+    if (!renderTexture.create(800, 600))
+    {
         std::cerr << "Failed to create render texture!" << std::endl;
         return EXIT_FAILURE;
     }
-    
+
     // Load blur shader
     sf::Shader blurShader;
     bool shaderLoaded = false;
     bool blurEnabled = false;
     float blurRadius = 50.0f;
-    
-    if (sf::Shader::isAvailable()) {
-        try {
-            if (blurShader.loadFromFile("assets/blur.frag", sf::Shader::Fragment)) {
+
+    if (sf::Shader::isAvailable())
+    {
+        try
+        {
+            if (blurShader.loadFromFile("assets/blur.frag", sf::Shader::Fragment))
+            {
                 shaderLoaded = true;
                 blurShader.setUniform("texture", sf::Shader::CurrentTexture);
                 blurShader.setUniform("blur_radius", blurRadius);
-            } else {
+            }
+            else
+            {
                 std::cerr << "Failed to load shader!" << std::endl;
             }
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception &e)
+        {
             std::cerr << "Shader exception: " << e.what() << std::endl;
         }
-    } else {
+    }
+    else
+    {
         std::cerr << "Shaders not available on this system." << std::endl;
     }
 
@@ -124,42 +165,46 @@ int main()
             timeValue = timeSlider.getSliderValue(event, window);
             sizeValue = sizeSlider.getSliderValue(event, window);
             numValue = numSlider.getSliderValue(event, window);
-            
+            smoothingValue = smoothingSlider.getSliderValue(event, window);
+
             // Handle blur toggle on B key press
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B) {
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B)
+            {
                 blurEnabled = !blurEnabled;
                 std::cout << "Blur " << (blurEnabled ? "enabled" : "disabled") << std::endl;
             }
-            
+
             if (event.type == sf::Event::Closed)
                 window.close();
         }
 
         // Calculate simulation time step
-        float deltaTime = calculateSimulationTime(clock, lastTime, timeValue);
+        // float deltaTime = calculateSimulationTime(clock, lastTime, timeValue);
 
         // Update physics
-        updateParticlePhysics(particles, deltaTime, GRAVITY);
+        // updateParticlePhysics(particles, deltaTime, GRAVITY);
 
         // Clear the render texture
         renderTexture.clear();
 
-        // Draw particles to render texture
-        int targetParticleCount = static_cast<int>(1.0f + (numValue - 400) / 250.0f * 99.0f);
-        while (particles.size() < targetParticleCount)
+        int targetParticleCount = static_cast<int>(1.0f + (numValue - 400) / 250.0f * 10000.0f);
+
+        particles.clear(); // Reset particles before generating a new grid
+
+        float spacing = 10.0f + (timeValue - 400) / 250.0f * 50.0f;
+
+        for (int i = 0; i < 100; i++)
         {
-            int randX = rand() % 800;
-            int randY = rand() % 600;
-            for (auto &particle : particles)
+            for (int j = 0; j < 100; j++)
             {
-                if (particle.x == randX && particle.y == randY)
+                if (particles.size() < targetParticleCount) // Only add up to required count
                 {
-                    randX = rand() % 800;
-                    randY = rand() % 600;
+                    Particle particle(spacing * i + 10, spacing * j + 10, 0, 0, 2.0f + (sizeValue - 400) / 250.0f * 100.0f, sf::Color(0, 128, 255, 255.0f - (sizeValue - 400) / 250.0f * 200.0f));
+                    particles.push_back(particle);
                 }
             }
-            particles.push_back(Particle(randX, randY, 0, 0));
         }
+
         while (particles.size() > targetParticleCount)
         {
             particles.pop_back();
@@ -167,34 +212,40 @@ int main()
 
         for (auto &particle : particles)
         {
-            float radius = 2.0f + (sizeValue - 400) / 250.0f * 100.0f;
-            sf::CircleShape shape(radius);
-            shape.setPosition(particle.x - radius, particle.y - radius);
-            shape.setFillColor(sf::Color(0, 128, 255, 255.0f - (sizeValue - 400)/250.0f * 200.0f));
-            renderTexture.draw(shape);
+            particle.draw(renderTexture);
         }
-        
+
         // Draw sliders to render texture
         timeSlider.draw(renderTexture);
         sizeSlider.draw(renderTexture);
         numSlider.draw(renderTexture);
-        
+        smoothingSlider.draw(renderTexture);
+
+        followMouse.x = sf::Mouse::getPosition(window).x;
+        followMouse.y = sf::Mouse::getPosition(window).y;
+        followMouse.radius = 50.0f + (smoothingValue - 400) / 250.0f * 100.0f;
+        followMouse.draw(renderTexture);
+        std::cout << calculateDensity(followMouse) << endl;
+
         // Display the render texture
         renderTexture.display();
-        
+
         // Create sprite from render texture
         sf::Sprite screenSprite(renderTexture.getTexture());
-        
+
         // Clear the main window
         window.clear();
-        
+
         // Apply blur if enabled and shader is available
-        if (blurEnabled && shaderLoaded) {
+        if (blurEnabled && shaderLoaded)
+        {
             window.draw(screenSprite, &blurShader);
-        } else {
+        }
+        else
+        {
             window.draw(screenSprite);
         }
-        
+
         window.display();
     }
 
