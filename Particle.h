@@ -2,12 +2,17 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-struct Particle
+class Particle
 {
-    float x;
-    float y;
-    float vx;
-    float vy;
+    public:
+
+        Particle(float x, float y, float vx, float vy);
+
+    
+        float x;
+        float y;
+        float vx;
+        float vy;
 };
 
 #endif // PARTICLE_H

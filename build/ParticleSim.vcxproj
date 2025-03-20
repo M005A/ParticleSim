@@ -339,9 +339,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\ParticleSim\main.cpp" />
     <ClCompile Include="C:\ParticleSim\Slider.cpp" />
     <ClInclude Include="C:\ParticleSim\Slider.h" />
+    <ClCompile Include="C:\ParticleSim\Particle.cpp" />
     <ClInclude Include="C:\ParticleSim\Particle.h" />
-    <ClCompile Include="C:\ParticleSim\Circle.cpp" />
-    <ClInclude Include="C:\ParticleSim\Circle.h" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

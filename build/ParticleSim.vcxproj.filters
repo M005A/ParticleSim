@@ -7,7 +7,7 @@
     <ClCompile Include="C:\ParticleSim\Slider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\ParticleSim\Circle.cpp">
+    <ClCompile Include="C:\ParticleSim\Particle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -16,9 +16,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\ParticleSim\Particle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\ParticleSim\Circle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

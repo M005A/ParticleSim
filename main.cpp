@@ -2,7 +2,6 @@
 #include <vector>
 #include <iostream>
 #include "Particle.h"
-#include "Circle.h"
 #include "Slider.h"
 
 using namespace std;
@@ -14,8 +13,8 @@ float calculateSimulationTime(sf::Clock &clock, float &lastTime, float sliderPos
     float deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
-    // Calculate time scaling factor from slider position (400-650 → 0.2x-3.0x)
-    float timeScale = 0.2f + (sliderPos - 400) / 250.0f * 9.8f;
+    // Calculate time scaling factor from slider position (400-650 → 0.2x-10.0x)
+    float timeScale = 0.0f + (sliderPos - 400) / 250.0f * 10.0f;
 
     // Apply time scaling to delta
     deltaTime *= timeScale;
@@ -68,18 +67,25 @@ void drawGrid(vector<sf::RectangleShape> &rectangles, int col, int row)
 int main()
 {
     const float GRAVITY = 9.81f * 3; // m/s²
+    float sliderPos = 400.0f;
 
     vector<Particle> particles;
-    vector<sf::RectangleShape> rectangles;
+    
+    Slider timeSlider(sliderPos, 50, 50, 25, sf::Color::Green);
+    float timeValue = 0;
 
-    drawGrid(rectangles, 25, 25);
+    Slider sizeSlider(sliderPos, 75, 50, 25, sf::Color::Red);
+    float sizeValue = 0;
+
+    Slider numSlider(sliderPos, 100, 50, 25, sf::Color::Blue);
+    float numValue = 0;
+
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 
     sf::Clock clock;
     float lastTime = 0;
-    bool dragging = false;
-    float sliderPos = 400.0f;
+
 
     while (window.isOpen())
     {
@@ -87,83 +93,48 @@ int main()
         sf::Event event;
         while (window.pollEvent(event))
         {
+            timeValue = timeSlider.getSliderValue(event, window);
+            sizeValue = sizeSlider.getSliderValue(event, window);
+            numValue = numSlider.getSliderValue(event, window);
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            // Handle mouse events
-            if (event.type == sf::Event::MouseButtonPressed)
-            {
-                if (event.mouseButton.button == sf::Mouse::Left)
-                {
-                    if (event.mouseButton.x > sliderPos - 50 &&
-                        event.mouseButton.x < sliderPos + 50 &&
-                        event.mouseButton.y > 50 &&
-                        event.mouseButton.y < 75)
-                    {
-                        dragging = true;
-                    }
-                }
-            }
 
-            if (event.type == sf::Event::MouseButtonReleased)
-            {
-                if (event.mouseButton.button == sf::Mouse::Left)
-                {
-                    dragging = false;
-                }
-            }
+
         }
 
         // Calculate simulation time step
-        float deltaTime = calculateSimulationTime(clock, lastTime, sliderPos);
+        float deltaTime = calculateSimulationTime(clock, lastTime, timeValue);
 
         // Update physics
         updateParticlePhysics(particles, deltaTime, GRAVITY);
 
-        // Update slider position if dragging
-        if (dragging)
-        {
-            sliderPos = sf::Mouse::getPosition(window).x;
-            if (sliderPos < 400)
-                sliderPos = 400;
-            if (sliderPos > 650)
-                sliderPos = 650;
-        }
 
         // Render
         window.clear();
 
-        // Draw particles
-        for (const auto &particle : particles)
+        int targetParticleCount = static_cast<int>(1.0f + (numValue - 400) / 250.0f * 99.0f);
+        while (particles.size() < targetParticleCount)
         {
-            Circle circle(particle.x, particle.y, 10, sf::Color::Red);
-            circle.draw(window);
+            particles.push_back(Particle(rand() % 800, rand() % 600, 0, 0));
         }
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        Circle followCircle(static_cast<float>(mousePos.x - 20), static_cast<float>(mousePos.y - 20), 20, sf::Color::Red);
-
-        // Draw rectangles (very inefficient, should be optimized)  
-        for (sf::RectangleShape &rectangle : rectangles)
+        while (particles.size() > targetParticleCount)
         {
-            if (followCircle.x + 40 > rectangle.getPosition().x &&
-                followCircle.x + 40 < rectangle.getPosition().x + 50 &&
-                followCircle.y + 40 > rectangle.getPosition().y &&
-                followCircle.y + 40 < rectangle.getPosition().y + 50)
-            {
-                rectangle.setFillColor(sf::Color::Green);
-            }
-            else
-            {
-                rectangle.setFillColor(sf::Color::White);
-            }
-
-            window.draw(rectangle);
+            particles.pop_back();
         }
-        followCircle.draw(window);
-        // Draw slider (commented out until Slider class is properly implemented)
-        // Slider slider(sliderPos, 50, 50, 25, sf::Color::Green);
-        // slider.draw(window);
 
+        for (auto &particle : particles)
+        {
+           sf::CircleShape shape(2.0f + (sizeValue - 400) / 250.0f * 18.0f);
+           shape.setPosition(particle.x, particle.y);
+           shape.setFillColor(sf::Color::Red);
+           window.draw(shape);
+        }
+
+        // Draw slider 
+        timeSlider.draw(window);
+        sizeSlider.draw(window);
+        numSlider.draw(window);
         window.display();
     }
 
