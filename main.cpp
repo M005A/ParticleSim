@@ -72,13 +72,13 @@ int main()
     vector<Particle> particles;
     
     Slider timeSlider(sliderPos, 50, 50, 25, sf::Color::Green);
-    float timeValue = 0;
+    float timeValue = sliderPos;  // Initialize to match the initial slider position
 
     Slider sizeSlider(sliderPos, 75, 50, 25, sf::Color::Red);
-    float sizeValue = 0;
+    float sizeValue = sliderPos;  // Initialize to match the initial slider position
 
     Slider numSlider(sliderPos, 100, 50, 25, sf::Color::Blue);
-    float numValue = 0;
+    float numValue = sliderPos;  // Initialize to match the initial slider position
 
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
