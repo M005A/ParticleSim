@@ -79,17 +79,17 @@ double calculateDensity(const Particle &mouse)
         float dx = particle.x - mouse.x;
         float dy = particle.y - mouse.y;
         float distanceSquared = dx * dx + dy * dy;
-        
+
         // Only count particles strictly within the mouse radius
         if (distanceSquared < h2)
         {
-             double weight = pow(1 - (distanceSquared / h2), 3);
-             density += weight;
+            double weight = pow(1 - (distanceSquared / h2), 3);
+            density += weight;
         }
     }
 
     // Normalize by the area to get density
-    double area =  3.14159265358979323846 * h2;
+    double area = 3.14159265358979323846 * h2;
     return density / area;
 }
 
@@ -178,30 +178,22 @@ int main()
                 window.close();
         }
 
-        // Calculate simulation time step
-        // float deltaTime = calculateSimulationTime(clock, lastTime, timeValue);
+        float deltaTime = calculateSimulationTime(clock, lastTime, timeValue);
 
         // Update physics
-        // updateParticlePhysics(particles, deltaTime, GRAVITY);
+        updateParticlePhysics(particles, deltaTime, GRAVITY);
 
         // Clear the render texture
         renderTexture.clear();
 
-        int targetParticleCount = static_cast<int>(1.0f + (numValue - 400) / 250.0f * 10000.0f);
-
-        particles.clear(); // Reset particles before generating a new grid
-
-        float spacing = 10.0f + (timeValue - 400) / 250.0f * 50.0f;
-
-        for (int i = 0; i < 100; i++)
+        int targetParticleCount = static_cast<int>(1.0f + (numValue - 400) / 250.0f * 624.0f);
+        if (particles.size() < targetParticleCount)
         {
-            for (int j = 0; j < 100; j++)
+            // Add new particles
+            for (int i = 0; i < targetParticleCount - particles.size(); i++)
             {
-                if (particles.size() < targetParticleCount) // Only add up to required count
-                {
-                    Particle particle(spacing * i + 10, spacing * j + 10, 0, 0, 2.0f + (sizeValue - 400) / 250.0f * 100.0f, sf::Color(0, 128, 255, 255.0f - (sizeValue - 400) / 250.0f * 200.0f));
-                    particles.push_back(particle);
-                }
+                Particle particle(rand() % 800, rand() % 600, 0, 0, 5.0f, sf::Color::White);
+                particles.push_back(particle);
             }
         }
 
@@ -212,6 +204,8 @@ int main()
 
         for (auto &particle : particles)
         {
+            particle.radius = 5.0f + (sizeValue - 400) / 250.0f * 100.0f;
+            particle.color = sf::Color(0, 128, 255, 255.0f - (sizeValue - 400) / 250.0f * 200.0f);
             particle.draw(renderTexture);
         }
 
